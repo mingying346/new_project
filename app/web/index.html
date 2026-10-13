@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>医保回流药资金线索研判工作台</title>
+<style>
+:root{--bg:#0d1117;--pan:#161b22;--bd:#30363d;--tx:#e6edf3;--dim:#8b949e;--acc:#58a6ff;--hi:#f85149}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Noto Sans CJK SC","Noto Sans SC","Source Han Sans SC","WenQuanYi Micro Hei",sans-serif;font-size:14px}
+header{padding:10px 16px;background:var(--pan);border-bottom:1px solid var(--bd);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+header b{font-size:16px}
+nav{display:flex;gap:6px;flex-wrap:wrap;padding:8px 16px;background:#11161d;border-bottom:1px solid var(--bd)}
+nav button{background:transparent;color:var(--dim);border:1px solid transparent;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:14px}
+nav button.on{color:var(--tx);background:var(--pan);border-color:var(--bd)}
+main{padding:16px;max-width:1600px;margin:0 auto}
+section{display:none}section.on{display:block}
+.card{background:var(--pan);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.kpi{flex:1;min-width:150px;background:var(--pan);border:1px solid var(--bd);border-radius:10px;padding:12px}
+.kpi span{display:block;color:var(--dim);font-size:12px}
+.kpi b{font-size:20px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{border-bottom:1px solid var(--bd);padding:5px 7px;text-align:left;vertical-align:top}
+th{color:var(--dim);position:sticky;top:0;background:var(--pan)}
+.wrap{max-height:560px;overflow:auto;border:1px solid var(--bd);border-radius:8px}
+input,select,button{background:#0d1117;color:var(--tx);border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:13px}
+button.act{background:#238636;border-color:#2ea043;cursor:pointer}
+button.act:hover{background:#2ea043}
+.pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11.5px;border:1px solid var(--bd)}
+.高{color:#fff;background:var(--hi);border-color:var(--hi)}
+.中{color:#0d1117;background:#d29922;border-color:#d29922}
+.低{color:var(--dim)}
+.mono{font-family:"DejaVu Sans Mono","Liberation Mono","Noto Sans Mono",monospace;font-size:11.5px;color:#79c0ff;word-break:break-all}
+.dim{color:var(--dim)}
+#chatlog .msg{border-left:3px solid var(--acc);padding:8px 10px;margin:8px 0;background:#12181f;border-radius:0 8px 8px 0}
+details{margin:4px 0}summary{cursor:pointer;color:var(--acc)}
+.bar{height:7px;background:#21262d;border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc)}
+svg{width:100%;height:640px;background:#0b1016;border-radius:8px;border:1px solid var(--bd)}
+.node circle{cursor:pointer}
+text{font-size:10px;fill:#c9d1d9;pointer-events:none}
+.link{stroke:#8b949e;fill:none;stroke-opacity:.5}
+#panel{position:fixed;right:14px;top:70px;width:430px;max-height:84vh;overflow:auto;background:var(--pan);
+border:1px solid var(--bd);border-radius:10px;padding:14px;display:none;z-index:9}
+#panel h3{margin:0 0 8px}
+.kv{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--bd);padding:3px 0;font-size:12.5px}
+.drop{border:2px dashed var(--bd);border-radius:10px;padding:20px;text-align:center;color:var(--dim);margin-top:10px}
+.drop.over{border-color:var(--acc);color:var(--tx);background:#12181f}
+.stg{display:inline-block;padding:4px 10px;border-radius:20px;border:1px solid var(--bd);margin:3px 6px 3px 0;font-size:12.5px;color:var(--dim)}
+.stg.run{border-color:#d29922;color:#d29922}
+.stg.done{border-color:#2ea043;color:#3fb950}
+.stg.fail{border-color:var(--hi);color:var(--hi)}
+.stg.skip{opacity:.45}
+#jlog{white-space:pre-wrap;word-break:break-all;padding:8px 10px;color:#8b949e;line-height:1.5;font-size:11.5px}
+button:disabled{opacity:.45;cursor:not-allowed}
+</style>
+</head>
+<body>
+<header><b>医保回流药资金线索智能研判工作台</b>
+  <span class="dim" id="meta">加载中…</span>
+  <span style="margin-left:auto" class="dim">线索研判工具 · 输出不等于犯罪事实认定</span>
+</header>
+<nav>
+<button data-t="t1" class="on">① 数据治理</button>
+<button data-t="t2">② 线索筛查</button>
+<button data-t="t3">③ 关系图谱</button>
+<button data-t="t4">④ 研判报告</button>
+<button data-t="t5">⑤ 对话查询</button>
+<button data-t="t6">⑥ 导入与处理</button>
+</nav>
+<main>
+<section id="t1" class="on">
+  <div class="row" id="kpis"></div>
+  <div class="card">
+    <b>质量清单</b>
+    <select id="qcat"><option>异常</option><option>缺失</option><option>重复</option><option>解析失败</option></select>
+    <input id="qq" placeholder="按文件名/字段过滤" style="width:220px">
+    <button class="act" onclick="loadQuality()">查询</button>
+    <span class="dim">缺失类为聚合计数（不逐格展开），重复/异常给到行号样本</span>
+    <div class="wrap" style="margin-top:8px"><table id="qt"></table></div>
+  </div>
+  <div class="card"><b>转换记录（每个源文件一条）</b>
+    <div class="wrap" style="margin-top:8px"><table id="ct"></table></div>
+  </div>
+</section>
+
+<section id="t2">
+  <div class="card">
+    <b>筛查条件</b>
+    <div class="row" style="margin-top:8px" id="prm"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="act" onclick="rescreen()">按此条件重新排序</button>
+      <button onclick="loadSubjects()">恢复默认视图</button>
+      <select id="fband"><option value="">全部分档</option><option>高</option><option>中</option><option>低</option></select>
+      <select id="frole"><option value="">全部角色</option></select>
+      <input id="fq" placeholder="按姓名/账号搜索" style="width:180px">
+      <button onclick="loadSubjects()">筛选</button>
+    </div>
+  </div>
+  <div class="card"><b>重点核查对象排序</b> <span class="dim">点击行查看依据与反证</span>
+    <div class="wrap" style="margin-top:8px"><table id="st"></table></div>
+  </div>
+</section>
+
+<section id="t3">
+  <div class="card">
+    <b>资金关系图</b>
+    模式 <select id="gmode"><option value="core">核心网（已归并主体+头部对手方，推荐）</option>
+      <option value="full">全量展开</option></select>
+    重点对象前 <input id="gtop" type="number" value="40" style="width:64px"> 位
+    · 最小边金额(元) <input id="gmin" type="number" value="10000" style="width:96px">
+    <label><input type="checkbox" id="glive">实时重建图谱（慢，约15秒）</label>
+    <button class="act" onclick="loadGraph()">应用</button>
+    <a href="/graph?static=1" target="_blank" style="color:#58a6ff">新窗口打开</a>
+    <a href="/graph?static=1&mode=full" target="_blank" style="color:#58a6ff">全量图</a>
+    <div class="dim" style="margin-top:6px" id="gnote">
+      默认直接读取 <code>output/03_关系图谱/资金关系图谱_核心网.html</code>（已验证成品，秒开）；
+      勾选"实时重建"才会按上面的参数重新构图。方向 = 付款方 → 收款方；虚线节点 = 身份待核查。图内支持：滚轮缩放、拖空白平移、
+      <b>拖动节点改位置</b>、单击看依据、双击看关系圈、切换"流向分层/社群聚类"布局。</div>
+  </div>
+  <iframe id="gframe" style="width:100%;height:calc(100vh - 220px);min-height:520px;
+    border:1px solid #30363d;border-radius:10px;background:#0b1016"></iframe>
+</section>
+
+<section id="t4">
+  <div class="card">
+    <b>研判报告</b>
+    <button class="act" onclick="regen()">重新生成报告</button>
+    <span class="dim">报告文件：output/04_研判报告/研判报告.md · .html · 研判结论.json</span>
+    <iframe id="rep" style="width:100%;height:70vh;border:1px solid #30363d;border-radius:8px;background:#fff"></iframe>
+  </div>
+</section>
+
+<section id="t5">
+  <div class="card">
+    <b>对话查询</b>
+    <div class="row" style="margin-top:8px">
+      <input id="qi" placeholder="例：为什么*玉兰排在前面 / 提现率高于0.8的有哪些 / 把夜间阈值改成0.4重新排序"
+             style="flex:1;min-width:320px" onkeydown="if(event.key==='Enter')ask()">
+      <select id="eng"><option value="auto">大模型+工具（自动降级）</option>
+        <option value="rules">仅确定性规则（离线可复现）</option></select>
+      <button class="act" onclick="ask()">提问</button>
+      <span class="dim" id="engtag"></span>
+    </div>
+    <div class="dim" style="margin-top:6px">
+      可用问法：为什么XX排在前面（要证据与反证）· 疑似开药人候选里被最多主体付款的前5个 ·
+      把夜间阈值改成0.05重新排序 · XX和YY之间有什么资金关系 · 哪些文件是重复的 · 数据范围。
+      大模型只能通过工具查本地 SQLite，数字与行号均来自查询结果，可审计；未配置密钥或限流时自动回退规则问答。
+    </div>
+    <div id="chatlog"></div>
+  </div>
+</section>
+
+<section id="t6">
+  <div class="card">
+    <b>① 导入数据</b>
+    <div class="dim" style="margin-top:6px">
+      支持 TXT（资金流水）与 XLSX（话单 / 寄递 / 台账 / 实人绑定），可选单个文件或整个文件夹。
+      按主体调取的数据建议保留取证目录的层级与命名（如
+      <code>已调取资金文件（身份证号调取）/140___198510____12_1/</code>），系统按目录名推断主体身份；
+      平铺的流水文件同样会入库分析，但只能通过「用户ID」与台账、实人绑定做身份对齐。
+      导入内容存放在 <code>data/导入数据/</code>，不会改动原始取证目录（证据保持只读）。
+    </div>
+    <div class="drop" id="drop">
+      拖拽文件到此处，或
+      <button class="act" onclick="pick('fin')">选择文件</button>
+      <button onclick="pick('fdir')">选择文件夹</button>
+      <input type="file" id="fin" multiple style="display:none" onchange="picked(this,0)">
+      <input type="file" id="fdir" webkitdirectory style="display:none" onchange="picked(this,1)">
+    </div>
+    <div id="fstatus" class="dim" style="margin-top:8px">尚未导入任何文件</div>
+    <div class="wrap" style="margin-top:8px;max-height:220px"><table id="ft"></table></div>
+    <div style="margin-top:8px"><button onclick="clearImport()">清空导入目录</button>
+      <span class="dim">目录：<code>data/导入数据/</code></span></div>
+  </div>
+  <div class="card">
+    <b>② 开始处理</b>
+    <div class="row" style="margin-top:8px">
+      <label>模式
+        <select id="pmode">
+          <option value="merge">合并分析（原始取证 + 导入数据，推荐）</option>
+          <option value="import">仅分析导入数据（忽略原始取证）</option>
+        </select></label>
+      <label><input type="checkbox" id="pexcel"> 同时导出整理表 Excel（约 10 分钟，可选）</label>
+      <button class="act" id="jstart" onclick="startJob()">开始处理</button>
+      <button id="jstop" onclick="stopJob()" disabled>停止</button>
+    </div>
+    <div class="dim" style="margin-top:6px">
+      处理会重建分析库并覆盖 <code>output/</code> 下对应的产物（整理表 Excel 仅在勾选时重跑）。
+      运行期间其它页签的查询会暂时不可用，完成后刷新即可看到新结果。
+    </div>
+    <div id="jstages" style="margin-top:10px"></div>
+    <div class="bar" id="jbar" style="margin-top:8px"><i style="width:0%"></i></div>
+    <div class="row" style="margin-top:8px"><span id="jnote" class="dim">尚未运行处理任务</span></div>
+    <div class="wrap" style="margin-top:8px;max-height:320px"><div id="jlog"></div></div>
+  </div>
+</section>
+</main>
+<div id="panel"></div>
+<script src="/static/app.js"></script>
+</body></html>

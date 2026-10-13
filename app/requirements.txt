@@ -1,0 +1,12 @@
+# 研判智能体运行依赖
+# 安装： python3 -m pip install -r app/requirements.txt
+# 说明：分析内核只用 Python 标准库(sqlite3/re/csv/hashlib) + 下面 4 个包；
+#       Web 工作台另需 fastapi + uvicorn。libs/ 内已离线附带 openpyxl。
+
+openpyxl>=3.1        # 读取话单/寄递/台账 xlsx
+XlsxWriter>=3.0      # 写出整理表与清单（支持 constant_memory 流式写大表）
+networkx>=2.8        # 关系图构建、社群划分、介数中心性、GraphML 导出
+fastapi>=0.95        # Web 研判工作台
+uvicorn>=0.20        # ASGI 服务器
+python-multipart>=0.0.5   # 工作台上传接口（Form data）
+Pillow>=9.0          # 可选：渲染静态图谱 PNG；缺省时静默跳过 PNG 导出（中文需系统 CJK 字体）

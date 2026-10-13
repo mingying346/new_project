@@ -1,0 +1,41 @@
+# ===== 密钥与本地配置：绝不提交 =====
+app/llm_config.local.json
+*.local.json
+*.pem
+*.key
+
+# ===== 案件取证数据：涉敏感个人信息，绝不入库 =====
+data/赛项一：竞赛数据/
+data/赛项一：竞赛数据.zip
+data/导入数据/
+
+# ===== 运行产物（分析库 / 整理表 / 图谱 / 报告，均可能含案件数据）=====
+output/
+data/上传暂存/
+
+# ===== 主办方材料：未获授权不转载 =====
+第三届全国公安院校大数据智能警务挑战赛.docx
+
+# ===== 打包产物 =====
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+
+# ===== 随包附带的第三方离线依赖（走 requirements.txt 安装即可）=====
+libs/
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# ===== 编辑器与系统文件 =====
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
